@@ -5,6 +5,7 @@ import io.reactivex.subjects.BehaviorSubject
 import javafx.beans.property.SimpleObjectProperty
 import javafx.beans.property.SimpleStringProperty
 import javafx.collections.FXCollections
+import javafx.scene.control.ButtonType
 import models.CanonicalScenario
 import models.canonicalScenarios
 import tornadofx.*
@@ -16,6 +17,7 @@ class ScenarioGroupChooserFragment : Fragment() {
   val canon = FXCollections.unmodifiableObservableList(canonicalScenarios.toList().asObservable())
 
   val refreshRecentProjects = BehaviorSubject.create<Unit>()
+  val error = BehaviorSubject.create<String>()
 
   override val root = borderpane {
     top = menubar {
@@ -39,7 +41,11 @@ class ScenarioGroupChooserFragment : Fragment() {
           button("Select root directory").action {
             val result = chooseDirectory("Select root")
             if (result != null) {
-              rootdir.value = result.absolutePath
+              if (result.validateBaseDir()) {
+                rootdir.value = result.absolutePath
+              } else {
+                error("Invalid base root", "Invalid base root. The directory needs to contain a dumped \"DATA0.bin\" and \"DATA1.bin\", or contain \"0\", \"1\", \"2\" from the extractIndexNum.py script.", ButtonType.OK)
+              }
             }
           }
         }
@@ -70,6 +76,11 @@ class ScenarioGroupChooserFragment : Fragment() {
     openScenarioEditor(selected)
   }
 }
+
+fun File.containsData0() = File(this, "DATA0.bin").exists() && File(this, "DATA1.bin").exists()
+fun File.containsExtractedIndexNum() = File(this, "0").exists() && File(this, "0").exists()
+
+fun File.validateBaseDir(): Boolean = containsData0() || containsExtractedIndexNum()
 
 fun openScenarioEditor(selected: CanonicalScenario) {
   find<ScenarioController>().scenario.onNext(selected)

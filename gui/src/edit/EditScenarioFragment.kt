@@ -2,10 +2,14 @@ package edit
 
 import bai.BaiFile
 import bsi.BsiFile
+import containsData0
+import containsExtractedIndexNum
 import edit.bsi.EditBsiView
+import fs.DATA0Format
 import io.reactivex.Observable
 import io.reactivex.subjects.BehaviorSubject
 import javafx.scene.control.TabPane
+import kt.fs.FeFileSystem
 import models.CanonicalScenario
 import models.Language
 import strings.MapStringsParser
@@ -62,19 +66,32 @@ fun <T> Observable<ScenarioController.RefreshFromFilesystem<T>>.file() = map { i
 
 fun CanonicalScenario.copyToMods(root: File) {
   val mods = File("mods").also(File::mkdirs)
-  fun File.copyFileToMods() = copyTo(File(mods, name), false)
-  File(root, "$baiEntryID").copyFileToMods()
-  File(root, "$bsiEntryID").copyFileToMods()
-  File(root, "$terrainID").copyFileToMods()
-  listOf(Language.ENG_U).associateWith {
-    File(root, "${textSBase[it]}")
-  }.values.map { it.copyFileToMods() }
-  listOf(Language.ENG_U).associateWith {
-    File(root, "${textBBase[it]}")
-  }.values.map { it.copyFileToMods() }
-  listOf(Language.ENG_U).associateWith {
-    File(root, "${textVBase[it]}")
-  }.values.map { it.copyFileToMods() }
+
+  val copyFileToMods: (Int) -> Unit = when {
+    root.containsData0() -> {
+      val data0 = DATA0Format(File(root, "DATA0.bin"))
+      val data1 = File(root, "DATA1.bin");
+      { index ->
+        val buf = data1.memmap(size = data0[index].decompressedSize.toLong(), start = data0[index].offset.toLong())
+        File(mods, "$index").outputStream().channel.use {
+          it.write(buf)
+        }
+      }
+    }
+    root.containsExtractedIndexNum() -> {
+      { index -> File("$index").copyTo(File(mods, "$index"), false) }
+    }
+    else -> error("not data0 or extractedindexnum")
+  }
+
+  copyFileToMods(baiEntryID)
+  copyFileToMods(bsiEntryID)
+  copyFileToMods(terrainID)
+  Language.values().forEach {
+    copyFileToMods(textSBase[it]!!)
+    copyFileToMods(textBBase[it]!!)
+    copyFileToMods(textVBase[it]!!)
+  }
 }
 
 class EditScenarioFragment : Fragment("Edit Scenario") {
