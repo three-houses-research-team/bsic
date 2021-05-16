@@ -1,4 +1,4 @@
-package bsi.models
+package models
 
 import java.util.*
 

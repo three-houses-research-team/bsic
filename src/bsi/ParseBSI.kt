@@ -2,8 +2,6 @@ package bsi
 
 import bsi.blocks.BsiAction
 import bsi.blocks.BsiCondition
-import bsi.blocks.bsiActionIds
-import bsi.blocks.bsiConditionIds
 import utils.*
 import java.nio.ByteBuffer
 
@@ -74,10 +72,10 @@ class BsiFile(buffer: ByteBuffer) {
 
 fun ByteBuffer.readCondition(): BsiCondition {
   val magic = u4
-  val findMagic = bsiConditionIds[magic]
+  val findMagic = BsiCondition.idMap[magic]
   if (findMagic != null) return readClass(findMagic)
 
-  val length = conditionUnknownBlockLengths[magic] ?: error("Don't know what a $magic is, found it at ${position()}")
+  val length = BsiCondition.conditionUnknownBlockLengths[magic] ?: error("Don't know what a $magic is, found it at ${position()}")
   return BsiCondition.UnknownCondition(magic, length.times { u4 })
 }
 
@@ -117,9 +115,9 @@ private fun ByteBuffer.dumpBuffer(readBack: Int = 15, readForward: Int = 25) = p
 
 fun ByteBuffer.readAction(): BsiAction {
   val magic = u4
-  val findMagic = bsiActionIds[magic]
+  val findMagic = BsiAction.idMap[magic]
   if (findMagic != null) return readClass(findMagic)
 
-  val length = actionUnknownBlockLengths[magic] ?: error("Don't know what a $magic is, found it at ${position()}")
+  val length = BsiAction.actionUnknownBlockLengths[magic] ?: error("Don't know what a $magic is, found it at ${position()}")
   return BsiAction.UnknownAction(magic, length.times { u4 })
 }

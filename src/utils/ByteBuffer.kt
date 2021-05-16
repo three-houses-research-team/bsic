@@ -16,8 +16,8 @@ val ByteBuffer.u4 get() = int.toUInt()
 inline val ByteBuffer.u4n get() = u4n()
 fun ByteBuffer.u4n(nullValue: UInt = 0xffffffffu) = u4.let { if (it == nullValue) null else it }
 
-//fun ByteBuffer.u4(i: UInt): ByteBuffer = this.putInt(i.toInt())
-//fun ByteBuffer.u4(i: Int): ByteBuffer = this.putInt(i)
+fun ByteBuffer.u4(i: UInt): ByteBuffer = this.putInt(i.toInt())
+fun ByteBuffer.u4(i: Int): ByteBuffer = this.putInt(i)
 val ByteBuffer.u2 get() = short.toUShort()
 fun ByteBuffer.u2(i: Short): ByteBuffer = this.putShort(i)
 fun ByteBuffer.u2(i: UShort): ByteBuffer = this.putShort(i.toShort())
@@ -67,6 +67,6 @@ val ByteBuffer.nullString
     val end = position()
     position(start) // rewind
     val len = end - start
-    val array = array(len)
+    val array = array(len-1) // remove null terminal
     return String(array)
   }

@@ -24,13 +24,21 @@ sourceSets.main {
   java.srcDirs("src")
   resources.srcDirs("res")
 }
+sourceSets.test {
+  java.srcDirs("test")
+  resources.srcDirs("testRes")
+}
 
 tasks.withType<KotlinCompile> {
   kotlinOptions {
-    jvmTarget = "1.8"
+    jvmTarget = "11"
     freeCompilerArgs =
       freeCompilerArgs + "-Xuse-experimental=kotlin.ExperimentalUnsignedTypes" + "-Xuse-experimental=kotlin.ExperimentalStdlibApi"
   }
+}
+
+tasks.withType<Test> {
+  useJUnitPlatform()
 }
 
 application {
@@ -40,6 +48,12 @@ application {
 dependencies {
   implementation("org.jetbrains.kotlinx:kotlinx-cli:0.3.1")
   implementation(kotlin("reflect"))
+//  implementation(kotlin("stdlib-jdk8"))
+
+  testImplementation("org.junit.jupiter:junit-jupiter-api:5.7.1")
+  testImplementation("io.kotest:kotest-runner-junit5:4.4.3")
+  testImplementation("io.kotest:kotest-assertions-core:4.4.3")
+  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.7.1")
 }
 
 githubRelease {

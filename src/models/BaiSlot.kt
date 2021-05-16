@@ -1,4 +1,4 @@
-package bsi.models
+package models
 
 /**
  * 213 = 2nd BAI version slot 13

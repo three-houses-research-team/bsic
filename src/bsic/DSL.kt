@@ -1,10 +1,10 @@
 package bsic
 
-import bsi.blocks.BsiAction
-import bsi.blocks.BsiCondition
 import bsi.BsiEvent
 import bsi.BsiFile
 import bsi.Trigger
+import bsi.blocks.BsiAction
+import bsi.blocks.BsiCondition
 
 
 class EventBuilder {
