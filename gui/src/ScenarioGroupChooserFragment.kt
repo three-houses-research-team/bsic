@@ -65,7 +65,7 @@ class ScenarioGroupChooserFragment : Fragment() {
 
   fun copyScenarioAndOpen(selected: CanonicalScenario) {
     val rootFile = File(rootdir.value)
-    selected.copyToMods(File(rootFile, "base"))
+    selected.copyToMods(rootFile)
     refreshRecentProjects.onNext(Unit)
     openScenarioEditor(selected)
   }
