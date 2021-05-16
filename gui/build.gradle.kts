@@ -10,6 +10,7 @@ plugins {
   kotlin("jvm")
   application
   id("org.openjfx.javafxplugin") version "0.0.8"
+  id("com.github.johnrengelman.shadow")
 }
 
 javafx {
@@ -37,8 +38,15 @@ tasks.withType<KotlinCompile> {
 }
 
 application {
-  mainClassName  = "MainKt"
+  mainClassName  = "BsicAppKt"
 }
+
+tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar> {
+  manifest {
+    attributes["Main-Class"] = application.mainClassName
+  }
+}
+
 
 dependencies {
   implementation("org.jetbrains.kotlinx:kotlinx-cli:0.3.1")
@@ -50,5 +58,8 @@ dependencies {
   api("com.github.thomasnield:rxkotlinfx:2.2.2")
   api("io.reactivex.rxjava2:rxkotlin:2.2.0")
   api("io.reactivex.rxjava2:rxjava:2.2.0")
+  runtimeOnly("org.openjfx:javafx-graphics:${javafx.version}:win")
+  runtimeOnly("org.openjfx:javafx-graphics:${javafx.version}:linux")
+  runtimeOnly("org.openjfx:javafx-graphics:${javafx.version}:mac")
 
 }
