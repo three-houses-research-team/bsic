@@ -9,8 +9,8 @@ class BsicApp : App(MainView::class) {
 }
 
 fun main(args: Array<String>) {
-  launch<BsicApp>(args)
-//  launch<DebugApp>(args)
+//  launch<BsicApp>(args)
+  launch<DebugApp>(args)
 }
 
 class DebugApp : App(EditScenarioFragment::class) {

@@ -1,5 +1,6 @@
 package edit
 
+import bai.BAIWriter
 import bai.BaiFile
 import edit.bsi.EditBsiController
 import io.reactivex.subjects.BehaviorSubject
@@ -12,6 +13,8 @@ import javafx.scene.control.cell.ComboBoxTableCell
 import javafx.scene.control.cell.TextFieldTableCell
 import javafx.util.StringConverter
 import models.InventorySlottable
+import models.ItemSlotU2
+import models.index
 import terrain.TerrainTileType
 import terrain.TerrainTiles
 import tornadofx.*
@@ -25,18 +28,7 @@ class EditBaiView : View() {
   override val root = tabpane {
     tabClosingPolicy = TabPane.TabClosingPolicy.UNAVAILABLE
     for (versionIndex in 0..2) tab("$versionIndex") {
-
-//      val withIndex = bai.blocks[versionIndex].withIndex()
-//      val version = withIndex.toList().map { BaiModel(it.index, it.value) }.asObservable()
       borderpane {
-        val view = PickTileView()
-
-//        top {
-//          val toMap = withIndex.associate { (it.value.xCoord.toInt() to it.value.yCoord.toInt()) to it.index }
-//          for ((k, v) in toMap) view.posMap[k] = v
-//          add(view)
-//        }
-
         center = tableview<BaiModel> {
           readonlyColumn("ID", BaiModel::index)
           column("Character", BaiModel::characterProp).makeEnumEditable().notSortable()
@@ -62,13 +54,18 @@ class EditBaiView : View() {
           column("Ability 4", BaiModel::ability4).makeEnumEditable().notSortable()
           column("Ability 5", BaiModel::ability5).makeEnumEditable().notSortable()
 
-//          view.clickedOnTile = fun(pair) {
-//            val (x, y) = pair
-//            val found = version.find { it.xProp.value.toInt() == x && it.yProp.value.toInt() == y }?.index ?: return
-//            selectionModel.select(found)
-//          }
           scenarioController.bai.data().map { it.blocks[versionIndex].mapIndexed { index, value -> BaiModel(index, value) } }.subscribe {
             items.setAll(it)
+          }
+
+          onEditCommit { edited ->
+            val bai = scenarioController.bai.value!!
+            val baiFlat = bai.data.value!!.blocks.flatten().toMutableList()
+            val serialized = edited.convert()
+            baiFlat[tablePosition.row + versionIndex * 100] = serialized
+            bai.refresh {
+              BAIWriter.write(bai.file, baiFlat)
+            }
           }
 
           isEditable = true
@@ -110,11 +107,12 @@ fun <T> TableColumn<T, Int?>.makeEditable() = apply {
   })
 }
 
-class BaiModel(var index: Int, orig: BaiFile.CharacterBlock) : ItemViewModel<BaiModel>() {
+class BaiModel(var index: Int, val orig: BaiFile.CharacterBlock) : ItemViewModel<BaiModel>() {
   val characterProp = SimpleObjectProperty(orig.character)
   val team = SimpleObjectProperty(orig.team)
   val level = SimpleIntegerProperty(orig.level.toInt())
   val classID = SimpleObjectProperty(orig.feClass)
+  val spawn = SimpleObjectProperty(orig.scriptSpawn)
 
   val xProp = SimpleIntegerProperty(orig.xCoord.toInt());
   var x by xProp
@@ -137,6 +135,31 @@ class BaiModel(var index: Int, orig: BaiFile.CharacterBlock) : ItemViewModel<Bai
   val ability3 = SimpleObjectProperty(orig.abilities.getOrNull(2))
   val ability4 = SimpleObjectProperty(orig.abilities.getOrNull(3))
   val ability5 = SimpleObjectProperty(orig.abilities.getOrNull(4))
+
+  fun convert() = BaiFile.CharacterBlock(
+    (characterProp.value?.ordinal?.plus(1) ?: 0).toUShort(),
+    orig.unk, // TODO
+    (classID.value?.ordinal?.plus(1) ?: 0).toUShort(),
+    listOf(item1, item2, item3, item4, item5, item6).map { it.value.index }.map { ItemSlotU2(it.toUShort()) },
+    itemsFlags.value!!.toUShort(),
+    listOf(ability1, ability2, ability3, ability4, ability5).map { it.value?.ordinal?.plus(1) ?: 0 }.map { it.toUByte() },
+    x.toUByte(),
+    yProp.value!!.toUByte(),
+    rotation.value!!.toUByte(),
+    level.value!!.toUByte(),
+    team.value!!,
+    spawn.value!!,
+    movement.value!!.toUByte(),
+    orig.unk1, // TODO
+    orig.commanderStatus, // TODO
+    (battalion.value?.ordinal?.plus(1) ?: 0).toUByte(),
+    battalionLevel.value!!.toUByte(),
+    (spell1.value?.ordinal?.plus(1) ?: 0).toUByte(),
+    (spell2.value?.ordinal?.plus(1) ?: 0).toUByte(),
+    orig.combatArt, // TODO
+    orig.gender, // TODO
+    orig.padding, // TODO
+  )
 }
 
 class PickTileView : View() {

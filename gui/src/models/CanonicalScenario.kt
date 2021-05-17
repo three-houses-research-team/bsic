@@ -71,7 +71,7 @@ val canonicalScenarios = arrayOf(
   asc("Hunting by Daybreak"),
   asc("Protecting Garreg Mach"),
   asc("Ambush at Ailell"),
-  asc("The Great PlatformLogger.Bridge Coup"),
+  asc("The Great Bridge Coup"),
   asc("To War at Gronder"),
   asc("To War at Gronder"),
   asc("Taking Fort Merceus"),

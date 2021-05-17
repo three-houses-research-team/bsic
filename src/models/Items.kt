@@ -11,6 +11,14 @@ interface InventorySlottable {
   }
 }
 
+val InventorySlottable?.index get() = when(this) {
+  null -> 0
+  is Weapon -> 1 + ordinal
+  is Accessory -> 601 + ordinal
+  is Consumable -> 1001 + ordinal
+  else -> error("Don't know what $this is")
+}
+
 enum class Weapon : InventorySlottable {
   BLANK_0,
   BLANK_1,
