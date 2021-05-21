@@ -8,8 +8,9 @@ import edit.bsi.EditBsiView
 import fs.DATA0Format
 import io.reactivex.Observable
 import io.reactivex.subjects.BehaviorSubject
+import javafx.scene.control.Tab
 import javafx.scene.control.TabPane
-import kt.fs.FeFileSystem
+import javafx.scene.control.Tooltip
 import models.CanonicalScenario
 import models.Language
 import strings.MapStringsParser
@@ -21,6 +22,7 @@ import tornadofx.tab
 import tornadofx.tabpane
 import utils.memmap
 import utils.next
+import utils.setFileTooltip
 import utils.toSubject
 import java.io.File
 import java.nio.ByteBuffer
@@ -37,6 +39,7 @@ class ScenarioController : Controller() {
     init {
       refresh.startWith(Unit).map { file.memmap(fn = reader) }.subscribe(data)
     }
+
     fun refresh(writer: () -> Any) {
       writer()
       refresh.next()
@@ -101,26 +104,27 @@ class EditScenarioFragment : Fragment("Edit Scenario") {
   val editTerrainView by inject<EditTerrainView>()
   val editStringsView by inject<EditStringsView>()
 
-  override val root = with(scope) {
-    tabpane {
-      tabClosingPolicy = TabPane.TabClosingPolicy.UNAVAILABLE
-      tab("Tiles") {
-        add(editTerrainView)
-      }
-      tab("BAI") {
-        add(editBaiView)
-      }
-      tab("BSI") {
-        add(editBsiView)
-      }
+  override val root = tabpane {
+    tabClosingPolicy = TabPane.TabClosingPolicy.UNAVAILABLE
+    tab("Tiles") {
+      setFileTooltip(scenarioController.terrain)
+      add(editTerrainView)
+    }
+    tab("BAI") {
+      setFileTooltip(scenarioController.bai)
+      add(editBaiView)
+    }
+    tab("BSI") {
+      setFileTooltip(scenarioController.bsi)
+      add(editBsiView)
+    }
 
-      tab("SCENDAT") {
+    tab("SCENDAT") {
 
-      }
+    }
 
-      tab("Strings") {
-        add(editStringsView)
-      }
+    tab("Strings") {
+      add(editStringsView)
     }
   }
 }

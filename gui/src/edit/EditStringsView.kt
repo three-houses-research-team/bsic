@@ -17,6 +17,7 @@ import strings.TextSFile
 import tornadofx.*
 import utils.TextAreaListCell
 import utils.TextAreaTableCell
+import utils.setFileTooltip
 
 class EditStringsView : View() {
   val scenarioController: ScenarioController by inject()
@@ -32,10 +33,8 @@ class EditStringsView : View() {
       vgrow = Priority.ALWAYS
       tabClosingPolicy = TabPane.TabClosingPolicy.UNAVAILABLE
       tab("TextS") {
+        setFileTooltip(controller.textS)
         vbox {
-          label {
-            controller.textS.subscribe { text = "Index: ${it.file.name}" }
-          }
           scrollpane(fitToWidth = true, fitToHeight = true) {
             vgrow = Priority.ALWAYS
             listview<String> {
@@ -53,9 +52,11 @@ class EditStringsView : View() {
         }
       }
       tab("TextV") {
+        setFileTooltip(controller.textV)
         add(find<MapStringsEditor>(MapStringsEditor::mapStrings to controller.textV))
       }
       tab("TextB") {
+        setFileTooltip(controller.textB)
         add(find<MapStringsEditor>(MapStringsEditor::mapStrings to controller.textB))
       }
     }
