@@ -96,10 +96,10 @@ fun CanonicalScenario.copyToMods(root: File) {
 
 class EditScenarioFragment : Fragment("Edit Scenario") {
   val scenarioController: ScenarioController by inject()
-  val editBsiView = find<EditBsiView>()
-  val editBaiView = find<EditBaiView>()
-  val editTerrainView = find<EditTerrainView>()
-  val editStringsView = find<EditStringsView>()
+  val editBsiView by inject<EditBsiView>()
+  val editBaiView by inject<EditBaiView>()
+  val editTerrainView by inject<EditTerrainView>()
+  val editStringsView by inject<EditStringsView>()
 
   override val root = with(scope) {
     tabpane {
