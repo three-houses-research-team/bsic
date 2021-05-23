@@ -51,7 +51,7 @@ class EditActions : View() {
       "Show TextS with ID=${id} - \"$textString\""
     }
     is BsiAction.BattleTalk -> {
-      val mapString = controller.textB.value?.data?.value?.getOrNull(entryID.toInt() - 1)
+      val mapString = controller.textV.value?.data?.value?.getOrNull(entryID.toInt() - 1)
       val description = mapString?.let {
         "${FeCharacter.values().getOrNull(mapString.who)}: \"${
           mapString.text.replace(
