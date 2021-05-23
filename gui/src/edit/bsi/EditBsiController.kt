@@ -2,6 +2,8 @@ package edit.bsi
 
 import bsi.BsiEvent
 import edit.ScenarioController
+import edit.data
+import io.reactivex.rxkotlin.withLatestFrom
 import io.reactivex.subjects.BehaviorSubject
 import models.Language
 import tornadofx.Controller
@@ -17,4 +19,10 @@ class EditBsiController : Controller() {
   val textB = selectedLanguage.flatMap { scenarioController.textB[it]!! }.toSubject()
 
   val jumpToEventId = BehaviorSubject.create<Int>()
+
+  init {
+    jumpToEventId.withLatestFrom(scenarioController.bsi.data()).subscribe { (jumpToId, bsi) ->
+      selectedEvent.onNext(bsi.events[jumpToId])
+    }
+  }
 }

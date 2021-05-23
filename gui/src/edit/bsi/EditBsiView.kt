@@ -5,6 +5,7 @@ import com.github.thomasnield.rxkotlinfx.toObservable
 import edit.ScenarioController
 import edit.data
 import io.reactivex.rxkotlin.Observables.combineLatest
+import javafx.beans.property.SimpleObjectProperty
 import tornadofx.*
 import java.util.*
 
@@ -45,7 +46,9 @@ class FilteredBsiEvents : View() {
       .subscribe {
         items.setAll(it)
       }
-    selectionModel.selectedItemProperty().toObservable().map { it.first }.subscribe(controller.selectedEvent)
+
+    selectionModel.selectedItemProperty().toObservable().map { (event, _) -> event }.subscribe(controller.selectedEvent)
+    controller.selectedEvent.distinct().subscribe { e -> selectionModel.select(items.indexOfFirst{ it.first == e }) }
 
     cellFormat { (event, comment) ->
       text = event.header.eventNum.toString() + (comment?.let { " - $comment" } ?: "")
