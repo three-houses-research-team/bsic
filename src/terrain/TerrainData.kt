@@ -9,16 +9,37 @@ import java.nio.ByteBuffer
 
 typealias TerrainTiles = List<List<Pair<TerrainTileType, TerrainTileType>>>
 
-class TerrainGrid(val map: Map<Pair< Int, Int>, Pair<TerrainTileType, TerrainTileType>>) : Map<Pair< Int, Int>, Pair<TerrainTileType, TerrainTileType>> by map {
+/**
+ * TODO: rewrite, this is so terrible
+ */
+class TerrainGrid(val map: Map<Pair< Int, Int>, Pair<TerrainTileType, TerrainTileType>>) : Map<Pair<Int, Int>, Pair<TerrainTileType, TerrainTileType>> by map {
   operator fun get(x: Int, y: Int) = map[x to y]
 
-  fun rowOrderIterator(): Iterator<Pair<Pair<Int, Int>, Pair< TerrainTileType, TerrainTileType>>> = iterator {
+  fun rowOrderIterator(): Iterator<Pair<Pair<Int, Int>, Pair<TerrainTileType, TerrainTileType>>> = iterator {
     for (y in 0 until 32) {
       for (x in 0 until 32) {
         yield((x to y) to (this@TerrainGrid[x, y]!!))
       }
     }
+  }
 
+  fun findMinimumMapSize(): Pair<Int, Int> {
+    var rows = 0
+    var cols = 0
+    for ((coords, tile) in rowOrderIterator()) {
+      val (x, y) = coords
+      if (tile.first != TerrainTileType.Impassable_0) {
+        if (rows < y) rows = y
+        if (cols < x) cols = x
+      }
+    }
+    return cols + 1 to rows + 1
+  }
+
+  fun minimalRowOrderIterator(): Iterator<Pair<Pair<Int, Int>, Pair<TerrainTileType, TerrainTileType>>> = iterator<Pair<Pair<Int, Int>, Pair<TerrainTileType, TerrainTileType>>> {
+    val (width, height) = findMinimumMapSize()
+
+    yieldAll(rowOrderIterator().asSequence().filter { (coords, _) -> coords.first < width && coords.second < height})
   }
 }
 

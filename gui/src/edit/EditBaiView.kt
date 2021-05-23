@@ -2,34 +2,51 @@ package edit
 
 import bai.BAIWriter
 import bai.BaiFile
+import com.github.thomasnield.rxkotlinfx.toObservable
 import edit.bsi.EditBsiController
+import edit.bsi.orNull
+import io.reactivex.rxkotlin.Observables.combineLatest
 import io.reactivex.subjects.BehaviorSubject
 import javafx.beans.property.SimpleIntegerProperty
 import javafx.beans.property.SimpleObjectProperty
-import javafx.collections.FXCollections
+import javafx.geometry.Pos
 import javafx.scene.control.TabPane
-import javafx.scene.control.TableColumn
-import javafx.scene.control.cell.ComboBoxTableCell
-import javafx.scene.control.cell.TextFieldTableCell
-import javafx.util.StringConverter
-import models.InventorySlottable
+import javafx.scene.layout.Background
+import javafx.scene.layout.BackgroundFill
+import javafx.scene.paint.Color
+import javafx.scene.paint.Paint
 import models.ItemSlotU2
 import models.index
-import terrain.TerrainTileType
-import terrain.TerrainTiles
+import models.terrainColors
 import tornadofx.*
-import utils.EnumStringConverter
-import kotlin.reflect.full.starProjectedType
+import utils.makeItemEditable
+import utils.notSortable
+import utils.makeEnumEditable
+import java.util.*
 
 class EditBaiView : View() {
   val scenarioController: ScenarioController by inject()
   val controller: EditBsiController by inject()
 
-  override val root = tabpane {
-    tabClosingPolicy = TabPane.TabClosingPolicy.UNAVAILABLE
-    for (versionIndex in 0..2) tab("$versionIndex") {
-      borderpane {
-        center = tableview<BaiModel> {
+  val pickTile: PickTileView by inject()
+
+  override val root = borderpane {
+    top { add(pickTile) }
+    center = tabpane {
+      tabClosingPolicy = TabPane.TabClosingPolicy.UNAVAILABLE
+
+      // subscribe tab selection -> bai list -> picktileview
+      selectionModel.selectedIndexProperty().toObservable()
+        .flatMap { versionIndex ->
+          scenarioController.bai.data().map {
+            it.blocks.getOrNull(versionIndex.toInt())?.withIndex()?.toList() ?: listOf()
+          }
+        }.subscribe(pickTile.loadedBaiSlots)
+
+      for (versionIndex in 0..2) tab("Version ${versionIndex + 1}") {
+        tableview<BaiModel> {
+          isEditable = true
+
           readonlyColumn("ID", BaiModel::index)
           column("Character", BaiModel::characterProp).makeEnumEditable().notSortable()
           column("Team", BaiModel::team).makeEnumEditable().notSortable()
@@ -54,9 +71,16 @@ class EditBaiView : View() {
           column("Ability 4", BaiModel::ability4).makeEnumEditable().notSortable()
           column("Ability 5", BaiModel::ability5).makeEnumEditable().notSortable()
 
-          scenarioController.bai.data().map { it.blocks[versionIndex].mapIndexed { index, value -> BaiModel(index, value) } }.subscribe {
-            items.setAll(it)
-          }
+          // subscribe items
+          scenarioController.bai.data()
+            .map { it.blocks[versionIndex].mapIndexed { index, value -> BaiModel(index, value) } }.subscribe {
+              items.setAll(it)
+            }
+
+          // subscribe row highlight -> pick title view highlight
+          selectionModel.selectedItemProperty().toObservable()
+            .map { Optional.of(it.xProp.value to it.yProp.value) }
+            .subscribe(pickTile.highlighted)
 
           onEditCommit { edited ->
             val bai = scenarioController.bai.value!!
@@ -67,44 +91,10 @@ class EditBaiView : View() {
               BAIWriter.write(bai.file, baiFlat)
             }
           }
-
-          isEditable = true
         }
       }
     }
   }
-}
-
-inline fun <T, S : Any?> TableColumn<T, S>.notSortable() = apply { isSortable = false }
-inline fun <T, reified S : Enum<*>?> TableColumn<T, S>.makeEnumEditable() = apply {
-  isEditable = true
-  val constants = S::class.java.enumConstants
-
-  val values: Array<S?> = if (S::class.starProjectedType.isMarkedNullable) (listOf(null) + constants).toTypedArray() else constants
-  cellFactory = ComboBoxTableCell.forTableColumn(EnumStringConverter<S>(), *values)
-}
-
-inline fun <T> TableColumn<T, InventorySlottable?>.makeItemEditable() = apply {
-  isEditable = true
-  val items: List<InventorySlottable?> = listOf(null) + InventorySlottable.all
-  val x = object : StringConverter<InventorySlottable?>() {
-    override fun toString(obj: InventorySlottable?): String = obj?.toString() ?: "None"
-
-    override fun fromString(string: String?): InventorySlottable? {
-      TODO("Not yet implemented")
-    }
-
-  }
-  cellFactory = ComboBoxTableCell.forTableColumn(x, items.asObservable())
-}
-
-fun <T> TableColumn<T, Int?>.makeEditable() = apply {
-  isEditable = true
-  cellFactory = TextFieldTableCell.forTableColumn(object : StringConverter<Int?>() {
-    override fun toString(obj: Int?): String = obj?.toString() ?: ""
-
-    override fun fromString(string: String?) = string?.toIntOrNull()
-  })
 }
 
 class BaiModel(var index: Int, val orig: BaiFile.CharacterBlock) : ItemViewModel<BaiModel>() {
@@ -142,7 +132,8 @@ class BaiModel(var index: Int, val orig: BaiFile.CharacterBlock) : ItemViewModel
     (classID.value?.ordinal?.plus(1) ?: 0).toUShort(),
     listOf(item1, item2, item3, item4, item5, item6).map { it.value.index }.map { ItemSlotU2(it.toUShort()) },
     itemsFlags.value!!.toUShort(),
-    listOf(ability1, ability2, ability3, ability4, ability5).map { it.value?.ordinal?.plus(1) ?: 0 }.map { it.toUByte() },
+    listOf(ability1, ability2, ability3, ability4, ability5).map { it.value?.ordinal?.plus(1) ?: 0 }
+      .map { it.toUByte() },
     x.toUByte(),
     yProp.value!!.toUByte(),
     rotation.value!!.toUByte(),
@@ -163,68 +154,54 @@ class BaiModel(var index: Int, val orig: BaiFile.CharacterBlock) : ItemViewModel
 }
 
 class PickTileView : View() {
-  val selectTile = BehaviorSubject.create<Pair<Int, Int>>()
-  val posMap = FXCollections.observableHashMap<Pair<Int, Int>, Int>()
   val scenarioController: ScenarioController by inject()
+  val loadedBaiSlots = BehaviorSubject.createDefault(listOf<IndexedValue<BaiFile.CharacterBlock>>())
 
-  override val root = borderpane {
-    top = gridpane {
-      scenarioController.terrain.data().map { it.grid }.subscribe { terrainData ->
-        replaceChildren {
-//          val (rows, cols) = findOccupiedMaxSizes(terrainData)
-//          for ((y, row) in terrainData.withIndex().take(rows)) row {
-//            for ((x, item) in row.withIndex().take(cols)) {
-//              hbox {
-//                val tile = item.first
-//                background = Background(BackgroundFill(Color.web(terrainColors[tile]), null, null))
-//                minWidth = 20.0
-//                minHeight = 20.0
-//                alignment = Pos.CENTER
-////                setOnMouseDragged {
-////                }
-////                setOnMouseEntered {
-////                  selectedTile.set(x to y)
-////                }
-////                setOnMouseClicked {
-////                  clickedOnTile?.invoke(x to y)
-////                }
-//
-//                label {
-//                  Bindings.valueAt(posMap, x to y).onChange { text = it.toString() }
-//                  style = "-fx-font-size: 10px;"
-//                }
-//              }
-//            }
-//          }
+  val highlighted = BehaviorSubject.createDefault(Optional.empty<Pair<Int, Int>>())
+
+  override val root = gridpane {
+    combineLatest(
+      scenarioController.terrain.data().map { it.grid },
+      loadedBaiSlots,
+      highlighted,
+    ).subscribe { (terrainData, baiSlots, highlight) ->
+      val (width, height) = terrainData.findMinimumMapSize()
+
+      replaceChildren {
+        for (y in 0 until height) row {
+          for (x in 0 until width) hbox {
+            val isHighlighted = x == highlight.orNull()?.first && y == highlight.orNull()?.second
+            style {
+              if (isHighlighted) {
+                borderWidth += box(2.px)
+                borderColor += box(Paint.valueOf("red"))
+              }
+            }
+            val (tile1, tile2) = terrainData.map[x to y]!!
+            background = Background(BackgroundFill(Color.web(terrainColors[tile1]), null, null))
+            if (isHighlighted) {
+              minWidth = 16.0
+              minHeight = 16.0
+            } else {
+              minWidth = 20.0
+              minHeight = 20.0
+            }
+            alignment = Pos.CENTER
+
+
+            label {
+              style {
+                fontSize = 10.px
+              }
+
+              val block = baiSlots.find { (_, it) -> it.xCoord.toInt() == x && it.yCoord.toInt() == y }
+              if (block != null && block.value.character != null) {
+                text = "${block.index % 100}"
+              }
+            }
+          }
         }
       }
     }
-//    center = vbox {
-//      label {
-//        selectTile.subscribe { (x, y) -> text = "($x, $y): ${terrain.grid[y][x]} }" }
-//      }
-//      label(selectedTile, converter = object : StringConverter<Pair<Int, Int>>() {
-//        override fun toString(obj: Pair<Int, Int>?) = obj?.let {
-//          val (x, y) = obj
-//          "($x, $y): ${terrain.grid[y][x]} }"
-//        } ?: ""
-//
-//        override fun fromString(string: String?): Pair<Int, Int> = TODO()
-//      })
-//    }
-  }
-
-  fun findOccupiedMaxSizes(tiles: TerrainTiles): Pair<Int, Int> {
-    var rows = 0
-    var cols = 0
-    for ((y, row) in tiles.withIndex()) {
-      for ((x, tile) in row.withIndex()) {
-        if (tile.first != TerrainTileType.Impassable_0) {
-          if (rows < y) rows = y
-          if (cols < x) cols = x
-        }
-      }
-    }
-    return cols + 1 to rows + 1
   }
 }

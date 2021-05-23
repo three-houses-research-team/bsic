@@ -15,9 +15,7 @@ import strings.MapString
 import strings.MapStrings
 import strings.TextSFile
 import tornadofx.*
-import utils.TextAreaListCell
-import utils.TextAreaTableCell
-import utils.setFileTooltip
+import utils.*
 
 class EditStringsView : View() {
   val scenarioController: ScenarioController by inject()
