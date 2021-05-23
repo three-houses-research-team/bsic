@@ -10,6 +10,7 @@ import javafx.scene.layout.Background
 import javafx.scene.layout.BackgroundFill
 import javafx.scene.paint.Color
 import models.terrainColors
+import terrain.TerrainData
 import terrain.TerrainGrid
 import terrain.TerrainTileType
 import tornadofx.*
@@ -62,6 +63,15 @@ class EditTerrainView : View() {
               mutableTerrain.putTile.onNext(brushTile to (x to y))
             }
             setOnMouseEntered { selectedTile.onNext(x to y) }
+
+            setOnMouseReleased {
+              val terrainFile = scenarioController.terrain.value!!
+              terrainFile.refresh {
+                val old = scenarioController.terrain.value!!.data.value!! // get me out of here
+                val new = TerrainData(old.header, mutableTerrain.updatedTerrain.value!!)
+                TerrainData.write(terrainFile.file, new)
+              }
+            }
 
             val tileObs = mutableTerrain.updatedTerrain.map { it[x, y]!! }
             tileObs.subscribe { (first, second) ->

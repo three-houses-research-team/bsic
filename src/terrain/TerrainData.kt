@@ -12,7 +12,7 @@ typealias TerrainTiles = List<List<Pair<TerrainTileType, TerrainTileType>>>
 /**
  * TODO: rewrite, this is so terrible
  */
-class TerrainGrid(val map: Map<Pair< Int, Int>, Pair<TerrainTileType, TerrainTileType>>) : Map<Pair<Int, Int>, Pair<TerrainTileType, TerrainTileType>> by map {
+class TerrainGrid(val map: Map<Pair<Int, Int>, Pair<TerrainTileType, TerrainTileType>>) : Map<Pair<Int, Int>, Pair<TerrainTileType, TerrainTileType>> by map {
   operator fun get(x: Int, y: Int) = map[x to y]
 
   fun rowOrderIterator(): Iterator<Pair<Pair<Int, Int>, Pair<TerrainTileType, TerrainTileType>>> = iterator {
@@ -41,26 +41,36 @@ class TerrainGrid(val map: Map<Pair< Int, Int>, Pair<TerrainTileType, TerrainTil
 
     yieldAll(rowOrderIterator().asSequence().filter { (coords, _) -> coords.first < width && coords.second < height})
   }
+
 }
 
-class TerrainData(buffer: ByteBuffer) {
-  data class Header(val unk1: UByte, val unk2: UByte, val unk3: UByte, val unk4: UByte, val unk5: UByte, val unk6: UByte, val unk7: UByte, val unk8: UByte)
+class TerrainData(val header: Header, val grid: TerrainGrid) {
 
-  val header = buffer.readClass(Header::class)
-  val grid = TerrainGrid(buildMap {
+  constructor(buffer: ByteBuffer) : this(buffer.readClass(Header::class), TerrainGrid(buildMap {
     32.times { y ->
       32.times { x ->
         put(x to y, TerrainTileType.values()[buffer.u1.toInt()] to TerrainTileType.values()[buffer.u1.toInt()])
       }
     }
-  })
+  }))
+  data class Header(val unk1: UByte, val unk2: UByte, val unk3: UByte, val unk4: UByte, val unk5: UByte, val unk6: UByte, val unk7: UByte, val unk8: UByte)
 
   companion object {
-    fun write(file: File, tiles: TerrainTiles) = file.byteBufferWriter {
+    fun write(file: File, tiles: TerrainData) = file.byteBufferWriter {
+      u1(tiles.header.unk1)
+      u1(tiles.header.unk2)
+      u1(tiles.header.unk3)
+      u1(tiles.header.unk4)
+      u1(tiles.header.unk5)
+      u1(tiles.header.unk6)
+      u1(tiles.header.unk7)
+      u1(tiles.header.unk8)
+
       for (y in 0 until 32) {
         for (x in 0 until 32) {
-          u1(tiles[y][x].first.ordinal.toUByte())
-          u1(tiles[y][x].second.ordinal.toUByte())
+          val tileAt = tiles.grid[x to y]!!
+          u1(tileAt.first.ordinal.toUByte())
+          u1(tileAt.second.ordinal.toUByte())
         }
       }
     }
