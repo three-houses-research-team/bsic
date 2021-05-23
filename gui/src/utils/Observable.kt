@@ -1,5 +1,6 @@
 package utils
 
+import edit.RefreshFromFilesystem
 import edit.ScenarioController
 import io.reactivex.Observable
 import io.reactivex.subjects.BehaviorSubject
@@ -12,4 +13,4 @@ fun <T> Observable<T>.toSubject(): BehaviorSubject<T> {
   return subject
 }
 
-val <T> BehaviorSubject<ScenarioController.RefreshFromFilesystem<T>>.data get() =this.value?.data?.value
+val <Y, T : RefreshFromFilesystem<Y>> BehaviorSubject<T>.data get() = this.value?.data?.value

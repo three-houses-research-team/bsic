@@ -84,7 +84,7 @@ class MapStringModel(original: MapString) {
 
 
 class MapStringsEditor() : Fragment() {
-  val mapStrings: BehaviorSubject<ScenarioController.RefreshFromFilesystem<List<MapString>>> by param()
+  val mapStrings: BehaviorSubject<RefreshFromFilesystem<List<MapString>>> by param()
 
   override val root = borderpane {
     center = tableview<MapStringModel> {

@@ -2,17 +2,24 @@ package edit
 
 import bai.BaiFile
 import bsi.BsiFile
+import com.squareup.moshi.JsonAdapter
+import com.squareup.moshi.JsonReader
+import com.squareup.moshi.JsonWriter
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import containsData0
 import containsExtractedIndexNum
 import edit.bsi.EditBsiView
 import fs.DATA0Format
 import io.reactivex.Observable
 import io.reactivex.subjects.BehaviorSubject
-import javafx.scene.control.Tab
 import javafx.scene.control.TabPane
-import javafx.scene.control.Tooltip
+import models.BSIExtras
 import models.CanonicalScenario
 import models.Language
+import okio.Sink
+import okio.buffer
+import okio.sink
 import strings.MapStringsParser
 import strings.TextSFile
 import terrain.TerrainData
@@ -27,27 +34,60 @@ import utils.toSubject
 import java.io.File
 import java.nio.ByteBuffer
 
-class ScenarioController : Controller() {
-  val root = File("mods")
-  val scenario = BehaviorSubject.create<CanonicalScenario>()
+val root = File("mods")
 
-  inner class RefreshFromFilesystem<T>(val name: String, val reader: (ByteBuffer) -> T) {
-    val file = File(root, name)
-    val data = BehaviorSubject.create<T>()
-    val refresh = BehaviorSubject.create<Unit>()
 
-    init {
-      refresh.startWith(Unit).map { file.memmap(fn = reader) }.subscribe(data)
-    }
+var moshi = Moshi.Builder()
+  .addLast(KotlinJsonAdapterFactory())
+  .build()
+var bsiExtrasAdapter: JsonAdapter<BSIExtras> = moshi.adapter(BSIExtras::class.java)
 
-    fun refresh(writer: () -> Any) {
-      writer()
-      refresh.next()
+open class RefreshFromFilesystem<T>(val file: File, val reader: (ByteBuffer) -> T) {
+  constructor(name: String, reader: (ByteBuffer) -> T) : this(File(root, name), reader)
+
+  val data = BehaviorSubject.create<T>()
+  val refresh = BehaviorSubject.create<Unit>()
+
+  init {
+    refresh.startWith(Unit).map { file.memmap(fn = reader) }.subscribe(data)
+  }
+
+  fun refresh(writer: () -> Any) {
+    writer()
+    refresh.next()
+  }
+}
+
+class BsiExtrasFs(bsiEntry: Int) : RefreshFromFilesystem<BSIExtras>(File(root, "$bsiEntry.json"), { buf ->
+  bsiExtrasAdapter.fromJson(
+    JsonReader.of(okio.Buffer().apply {
+      write(buf)
+    })
+  )!!
+}) {
+  fun put(extras: BSIExtras) {
+    refresh {
+      val writer = JsonWriter.of(file.sink(false).buffer())
+      bsiExtrasAdapter.toJson(writer, extras)
+      writer.flush()
     }
   }
 
+}
+
+class ScenarioController : Controller() {
+  val scenario = BehaviorSubject.create<CanonicalScenario>()
+
   val bai = scenario.map { RefreshFromFilesystem(it.baiEntryID.toString(), ::BaiFile) }.toSubject()
   val bsi = scenario.map { RefreshFromFilesystem(it.bsiEntryID.toString(), ::BsiFile) }.toSubject()
+
+  val bsiExtras = scenario.map {
+    val file = File(root, "${it.bsiEntryID}.json")
+    if (!file.exists()) file.writeText(bsiExtrasAdapter.toJson(BSIExtras(mapOf())))
+
+    BsiExtrasFs(it.bsiEntryID)
+  }.toSubject()
+
   val terrain = scenario.map { RefreshFromFilesystem(it.terrainID.toString(), ::TerrainData) }.toSubject()
 
   val textS = Language.values().associateWith {
@@ -63,9 +103,8 @@ class ScenarioController : Controller() {
   }
 }
 
-fun <T> Observable<ScenarioController.RefreshFromFilesystem<T>>.data() = flatMap { it.data }
-fun <T> Observable<ScenarioController.RefreshFromFilesystem<T>>.file() = map { it.file }
-
+fun <Y, T : RefreshFromFilesystem<Y>> BehaviorSubject<T>.data() = flatMap { it.data }
+fun <T : RefreshFromFilesystem<*>> BehaviorSubject<T>.file() = map { it.file }
 
 fun CanonicalScenario.copyToMods(root: File) {
   val mods = File("mods").also(File::mkdirs)

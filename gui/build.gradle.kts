@@ -54,6 +54,11 @@ dependencies {
   implementation("no.tornado:tornadofx:1.7.20")
   implementation(rootProject)
 
+  implementation("com.squareup.moshi:moshi:1.12.0")
+  implementation("com.squareup.moshi:moshi-kotlin:1.12.0")
+  implementation("com.squareup.okio:okio:2.10.0")
+
+
   implementation("org.controlsfx:controlsfx:8.40.14")
   api("com.github.thomasnield:rxkotlinfx:2.2.2")
   api("io.reactivex.rxjava2:rxkotlin:2.2.0")
