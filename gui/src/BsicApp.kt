@@ -5,12 +5,13 @@ import tornadofx.App
 import tornadofx.find
 import tornadofx.launch
 
-class BsicApp : App(MainView::class) {
-}
+class BsicApp : App(MainView::class)
 
 fun main(args: Array<String>) {
-//  launch<BsicApp>(args)
-  launch<DebugApp>(args)
+  if (args.getOrNull(0) == "--debug")
+    launch<DebugApp>(args)
+  else
+    launch<BsicApp>(args)
 }
 
 class DebugApp : App(EditScenarioFragment::class) {
