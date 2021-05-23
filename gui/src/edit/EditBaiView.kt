@@ -10,6 +10,7 @@ import io.reactivex.subjects.BehaviorSubject
 import javafx.beans.property.SimpleIntegerProperty
 import javafx.beans.property.SimpleObjectProperty
 import javafx.geometry.Pos
+import javafx.scene.Cursor
 import javafx.scene.control.TabPane
 import javafx.scene.layout.Background
 import javafx.scene.layout.BackgroundFill
@@ -81,6 +82,11 @@ class EditBaiView : View() {
           selectionModel.selectedItemProperty().toObservable()
             .map { Optional.of(it.xProp.value to it.yProp.value) }
             .subscribe(pickTile.highlighted)
+
+          // subscribe map click -> row highlight
+          pickTile.clickedBai.map { it.index }.subscribe {
+            selectionModel.select(it)
+          }
 
           onEditCommit { edited ->
             val bai = scenarioController.bai.value!!
@@ -158,6 +164,7 @@ class PickTileView : View() {
   val loadedBaiSlots = BehaviorSubject.createDefault(listOf<IndexedValue<BaiFile.CharacterBlock>>())
 
   val highlighted = BehaviorSubject.createDefault(Optional.empty<Pair<Int, Int>>())
+  val clickedBai = BehaviorSubject.create<IndexedValue<BaiFile.CharacterBlock>>()
 
   override val root = gridpane {
     combineLatest(
@@ -171,6 +178,8 @@ class PickTileView : View() {
         for (y in 0 until height) row {
           for (x in 0 until width) hbox {
             val isHighlighted = x == highlight.orNull()?.first && y == highlight.orNull()?.second
+            val block = baiSlots.find { (_, it) -> it.xCoord.toInt() == x && it.yCoord.toInt() == y && it.character != null }
+
             style {
               if (isHighlighted) {
                 borderWidth += box(2.px)
@@ -188,14 +197,28 @@ class PickTileView : View() {
             }
             alignment = Pos.CENTER
 
+            cursor = Cursor.HAND
+            onLeftClick {
+              if (block != null) {
+                clickedBai.onNext(block)
+                highlighted.onNext(Optional.of(x to y))
+              }
+            }
+
+            tooltip {
+              maxWidth = 300.0
+              isWrapText = true
+              text = "($x, $y) - ${tile1.name}, ${tile2.name}" +
+                if(block != null) "\nBAI: ${block.value}"
+                else ""
+            }
 
             label {
               style {
                 fontSize = 10.px
               }
 
-              val block = baiSlots.find { (_, it) -> it.xCoord.toInt() == x && it.yCoord.toInt() == y }
-              if (block != null && block.value.character != null) {
+              if (block != null) {
                 text = "${block.index % 100}"
               }
             }
