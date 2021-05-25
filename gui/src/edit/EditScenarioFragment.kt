@@ -128,7 +128,7 @@ fun CanonicalScenario.copyToMods(root: File) {
       }
     }
     root.containsExtractedIndexNum() -> {
-      { index -> File("$index").copyTo(File(mods, "$index"), false) }
+      { index -> File(root, "$index").copyTo(File(mods, "$index"), false) }
     }
     else -> error("not data0 or extractedindexnum")
   }
