@@ -1,5 +1,6 @@
 package edit
 
+import ScenarioController
 import bai.BAIWriter
 import bai.BaiFile
 import com.github.thomasnield.rxkotlinfx.toObservable
@@ -17,6 +18,7 @@ import javafx.scene.layout.BackgroundFill
 import javafx.scene.paint.Color
 import javafx.scene.paint.Paint
 import models.ItemSlotU2
+import models.data
 import models.index
 import models.terrainColors
 import tornadofx.*

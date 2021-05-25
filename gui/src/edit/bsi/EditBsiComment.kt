@@ -1,11 +1,8 @@
 package edit.bsi
 
 import com.github.thomasnield.rxkotlinfx.toObservable
-import com.github.thomasnield.rxkotlinfx.toObservableChanges
-import edit.ScenarioController
-import edit.data
-import io.reactivex.Observable
-import io.reactivex.rxkotlin.Observables
+import ScenarioController
+import models.data
 import io.reactivex.rxkotlin.Observables.combineLatest
 import io.reactivex.rxkotlin.withLatestFrom
 import models.BSIExtra

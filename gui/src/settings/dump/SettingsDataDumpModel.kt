@@ -1,6 +1,6 @@
 package settings.dump
 
-import edit.moshi
+import utils.moshi
 import javafx.beans.property.SimpleObjectProperty
 import tornadofx.ConfigProperties
 import tornadofx.ItemViewModel

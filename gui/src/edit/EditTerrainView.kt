@@ -1,5 +1,6 @@
 package edit
 
+import ScenarioController
 import com.github.thomasnield.rxkotlinfx.itemSelections
 import edit.bsi.EditBsiController
 import io.reactivex.Observable
@@ -9,6 +10,7 @@ import javafx.geometry.Pos
 import javafx.scene.layout.Background
 import javafx.scene.layout.BackgroundFill
 import javafx.scene.paint.Color
+import models.data
 import models.terrainColors
 import terrain.TerrainData
 import terrain.TerrainGrid

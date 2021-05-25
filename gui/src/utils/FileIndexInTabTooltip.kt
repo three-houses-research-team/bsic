@@ -1,6 +1,6 @@
 package utils
 
-import edit.RefreshFromFilesystem
+import models.RefreshFromFilesystem
 import io.reactivex.Observable
 import javafx.scene.control.Tab
 import javafx.scene.control.Tooltip

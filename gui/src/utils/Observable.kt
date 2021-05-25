@@ -1,7 +1,6 @@
 package utils
 
-import edit.RefreshFromFilesystem
-import edit.ScenarioController
+import models.RefreshFromFilesystem
 import io.reactivex.Observable
 import io.reactivex.subjects.BehaviorSubject
 

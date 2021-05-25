@@ -2,7 +2,7 @@ package settings.dump
 
 import tornadofx.ValidationContext
 import tornadofx.ValidationMessage
-import validateBaseDir
+import utils.fs.validateBaseDir
 import java.io.File
 
 val BaseDumpValidator: ValidationContext.(String?) -> ValidationMessage? = { str ->

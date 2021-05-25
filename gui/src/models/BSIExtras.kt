@@ -1,5 +1,10 @@
 package models
 
+import com.squareup.moshi.JsonAdapter
+import utils.moshi
+
+var bsiExtrasAdapter: JsonAdapter<BSIExtras> = moshi.adapter(BSIExtras::class.java)
+
 data class BSIExtra(
   val comment: String?
 )

@@ -1,11 +1,8 @@
 import edit.EditScenarioFragment
-import edit.ScenarioController
-import edit.copyToMods
 import models.canonicalScenarios
 import tornadofx.App
 import tornadofx.find
 import tornadofx.launch
-import java.io.File
 
 class BsicApp : App(MainView::class)
 

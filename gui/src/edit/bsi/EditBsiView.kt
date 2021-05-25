@@ -2,10 +2,9 @@ package edit.bsi
 
 import bsi.BsiEvent
 import com.github.thomasnield.rxkotlinfx.toObservable
-import edit.ScenarioController
-import edit.data
+import ScenarioController
+import models.data
 import io.reactivex.rxkotlin.Observables.combineLatest
-import javafx.beans.property.SimpleObjectProperty
 import tornadofx.*
 import java.util.*
 

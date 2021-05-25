@@ -1,14 +1,16 @@
 import edit.EditScenarioFragment
-import edit.ScenarioController
-import edit.copyToMods
+import fs.DATA0Format
 import io.reactivex.subjects.BehaviorSubject
 import javafx.beans.property.SimpleObjectProperty
-import javafx.beans.property.SimpleStringProperty
 import javafx.collections.FXCollections
 import models.CanonicalScenario
+import models.Language
 import models.canonicalScenarios
 import settings.dump.dataDump
 import tornadofx.*
+import utils.fs.containsData0
+import utils.fs.containsExtractedIndexNum
+import utils.memmap
 import java.io.File
 
 class ScenarioGroupChooserFragment : Fragment() {
@@ -58,12 +60,38 @@ class ScenarioGroupChooserFragment : Fragment() {
     refreshRecentProjects.onNext(Unit)
     openScenarioEditor(selected)
   }
+
+  fun CanonicalScenario.copyToMods(root: File) {
+    val mods = File("mods").also(File::mkdirs)
+
+    val copyFileToMods: (Int) -> Unit = when {
+      root.containsData0() -> {
+        val data0 = DATA0Format(File(root, "DATA0.bin"))
+        val data1 = File(root, "DATA1.bin");
+        { index ->
+          val buf = data1.memmap(size = data0[index].decompressedSize.toLong(), start = data0[index].offset.toLong())
+          File(mods, "$index").outputStream().channel.use {
+            it.write(buf)
+          }
+        }
+      }
+      root.containsExtractedIndexNum() -> {
+        { index -> File(root, "$index").copyTo(File(mods, "$index"), false) }
+      }
+      else -> kotlin.error("not data0 or extractedindexnum")
+    }
+
+    copyFileToMods(baiEntryID)
+    copyFileToMods(bsiEntryID)
+    copyFileToMods(terrainID)
+    Language.values().forEach {
+      copyFileToMods(textSBase[it]!!)
+      copyFileToMods(textBBase[it]!!)
+      copyFileToMods(textVBase[it]!!)
+    }
+  }
+
 }
-
-fun File.containsData0() = File(this, "DATA0.bin").exists() && File(this, "DATA1.bin").exists()
-fun File.containsExtractedIndexNum() = File(this, "0").exists() && File(this, "1").exists()
-
-fun File.validateBaseDir(): Boolean = containsData0() || containsExtractedIndexNum()
 
 fun openScenarioEditor(selected: CanonicalScenario) {
   find<ScenarioController>().scenario.onNext(selected)

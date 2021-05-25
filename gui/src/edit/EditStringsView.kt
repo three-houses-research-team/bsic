@@ -1,5 +1,6 @@
 package edit
 
+import ScenarioController
 import com.github.thomasnield.rxkotlinfx.onChangedObservable
 import com.github.thomasnield.rxkotlinfx.toObservable
 import edit.bsi.EditBsiController
@@ -11,6 +12,8 @@ import javafx.scene.control.TabPane
 import javafx.scene.layout.Priority
 import models.FeCharacter
 import models.Language
+import models.RefreshFromFilesystem
+import models.data
 import strings.MapString
 import strings.MapStrings
 import strings.TextSFile

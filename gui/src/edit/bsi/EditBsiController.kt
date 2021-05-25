@@ -1,8 +1,8 @@
 package edit.bsi
 
 import bsi.BsiEvent
-import edit.ScenarioController
-import edit.data
+import ScenarioController
+import models.data
 import io.reactivex.rxkotlin.withLatestFrom
 import io.reactivex.subjects.BehaviorSubject
 import models.Language
