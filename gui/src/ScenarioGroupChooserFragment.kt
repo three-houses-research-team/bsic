@@ -5,19 +5,17 @@ import io.reactivex.subjects.BehaviorSubject
 import javafx.beans.property.SimpleObjectProperty
 import javafx.beans.property.SimpleStringProperty
 import javafx.collections.FXCollections
-import javafx.scene.control.ButtonType
 import models.CanonicalScenario
 import models.canonicalScenarios
+import settings.dump.dataDump
 import tornadofx.*
 import java.io.File
 
 class ScenarioGroupChooserFragment : Fragment() {
-  val rootdir = SimpleStringProperty(config.string("rootdir"))
   val selectedCanonicalScenario = SimpleObjectProperty<CanonicalScenario>()
   val canon = FXCollections.unmodifiableObservableList(canonicalScenarios.toList().asObservable())
 
   val refreshRecentProjects = BehaviorSubject.create<Unit>()
-  val error = BehaviorSubject.create<String>()
 
   override val root = borderpane {
     top = menubar {
@@ -36,19 +34,6 @@ class ScenarioGroupChooserFragment : Fragment() {
     center = form {
       fieldset("From data dump") {
         label("Opening a scenario here will copy the files out of your dump directory and into the \"mods\" folder.")
-        field("Base game dump") {
-          textfield(rootdir)
-          button("Select root directory").action {
-            val result = chooseDirectory("Select root")
-            if (result != null) {
-              if (result.validateBaseDir()) {
-                rootdir.value = result.absolutePath
-              } else {
-                error("Invalid base root", "Invalid base root. The directory needs to contain a dumped \"DATA0.bin\" and \"DATA1.bin\", or contain \"0\", \"1\", \"2\" from the extractIndexNum.py script.", ButtonType.OK)
-              }
-            }
-          }
-        }
         field("Scenarios") {
           listview<CanonicalScenario>(canon) {
             bindSelected(selectedCanonicalScenario)
@@ -60,8 +45,6 @@ class ScenarioGroupChooserFragment : Fragment() {
           }
         }
         button("Open").action {
-          config["rootdir"] = rootdir.value
-          config.save()
           val selected = selectedCanonicalScenario.value ?: return@action
           copyScenarioAndOpen(selected)
         }
@@ -70,7 +53,7 @@ class ScenarioGroupChooserFragment : Fragment() {
   }
 
   fun copyScenarioAndOpen(selected: CanonicalScenario) {
-    val rootFile = File(rootdir.value)
+    val rootFile = app.config.dataDump?.baseGame ?: return
     selected.copyToMods(rootFile)
     refreshRecentProjects.onNext(Unit)
     openScenarioEditor(selected)
