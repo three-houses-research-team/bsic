@@ -37,8 +37,15 @@ import java.nio.ByteBuffer
 val root = File("mods")
 
 
-var moshi = Moshi.Builder()
+val moshi = Moshi.Builder()
   .addLast(KotlinJsonAdapterFactory())
+  .add(File::class.java, object : JsonAdapter<File>() {
+    override fun fromJson(reader: JsonReader) = File(reader.nextString())
+
+    override fun toJson(writer: JsonWriter, value: File?) {
+      writer.value(value?.absolutePath)
+    }
+  })
   .build()
 var bsiExtrasAdapter: JsonAdapter<BSIExtras> = moshi.adapter(BSIExtras::class.java)
 
