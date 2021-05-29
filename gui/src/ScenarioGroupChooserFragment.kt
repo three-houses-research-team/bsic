@@ -51,10 +51,11 @@ class ScenarioGroupChooserFragment : Fragment() {
         field("Scenarios") {
           listview<CanonicalScenario>(canon) {
             bindSelected(selectedCanonicalScenario)
-            onDoubleClick {
-              selectedItem?.let {
+            cellFormat {
+              onDoubleClick {
                 copyScenarioAndOpen(it)
               }
+              text = it.nameEngU
             }
           }
         }
