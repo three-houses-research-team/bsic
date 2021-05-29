@@ -6,6 +6,7 @@ import javafx.collections.FXCollections
 import models.CanonicalScenario
 import models.Language
 import models.canonicalScenarios
+import settings.SettingsView
 import settings.dump.dataDump
 import tornadofx.*
 import utils.fs.containsData0
@@ -33,6 +34,13 @@ class ScenarioGroupChooserFragment : Fragment() {
                 }
               }
             }
+          }
+        }
+      }
+      menu("Settings") {
+        item("BSIc settings") {
+          action {
+            find<SettingsView>().openModal()
           }
         }
       }
