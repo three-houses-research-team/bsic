@@ -1,10 +1,30 @@
-## BSIC: BSI compiler
+## BSIC: Fire Emblem Three Houses Map Editor
 
+Utilities and GUI used to edit Fire Emblem: Three Houses battle maps.
+
+### Requirements
+* [Have a dump of fe3h.](https://github.com/three-houses-research-team/Throne-of-Knowledge/wiki/Dump-&-Extract-Game#extract-romfs--exefs-of-base-game)
+
+### GUI
+
+Requires Java 11+, use [the freshest release](https://github.com/three-houses-research-team/bsic/releases).
+
+#### Main View
+![](docs/main.png)
+
+#### Tiles editor
+![](docs/tiles.png)
+
+#### BAI editor
+![](docs/bai_edit.png)
+
+#### BSI editor
+![](docs/bsi_edit.png)
+
+### Binary BSI -> BSIC command line interface
 Converts binary BSI scripts to/from a nice DSL.
 
-### Binary BSI -> BSIC
-1. Have a dump of fe3h.
-2. Locate a BSI file. 
+1. Locate a BSI file. 
     * Base game battles and stuff: [84](https://fedatamine.com/en-us/battles/0/a-skirmish-at-dawn), [86](https://fedatamine.com/en-us/battles/1/rivalry-of-the-houses), 88, ..., 246
     * Base game monastery: [256](https://fedatamine.com/en-us/monastery/0), [258](https://fedatamine.com/en-us/monastery/1), ... 364
     
