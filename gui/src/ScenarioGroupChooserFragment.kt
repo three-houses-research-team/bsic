@@ -26,7 +26,11 @@ class ScenarioGroupChooserFragment : Fragment() {
           refreshRecentProjects.startWith(Unit).map { findRecentProjects() }.subscribe { recents ->
             replaceChildren {
               for (recentItem in recents) {
-                item(recentItem.nameEngU)
+                item(recentItem.nameEngU) {
+                  action {
+                    openScenarioEditor(recentItem)
+                  }
+                }
               }
             }
           }
