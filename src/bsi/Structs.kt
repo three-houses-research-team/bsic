@@ -60,3 +60,25 @@ enum class FeRoute {
   }
 }
 
+data class CoordsInU4(val raw: UInt) {
+  val y = raw.toInt() % 100
+  val x = raw.toInt() / 100
+  override fun toString() = "CoordsInU4($x,$y)"
+}
+
+enum class GameMode {
+  CASUAL, CLASSIC
+}
+enum class DLCValueCheck {
+  ANNA, UNK, ABYSS
+}
+
+enum class MapResultConditionsType {
+  VICTORY, DEFEAT
+}
+
+data class WeirdCoordinate(val raw: UInt) {
+  val value = raw / 100u
+  val unk = raw % 100u
+  override fun toString() = "WeirdCoordinate(value=$value, unk=$unk)"
+}
